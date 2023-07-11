@@ -1,2 +1,2 @@
 /server/node_modules/*
-/arduino-sketch/dht22-http-post/secrets.h
+arduino-sketch/dht22-http-post/secrets.h
