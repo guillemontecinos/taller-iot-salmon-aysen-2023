@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller IoT 2023</title>
+</head>
+<body>
+    <div>
+        <p>Temperatura: <span id="temperature">X</span>ºC</p></div>
+        <p>Humdead: <span id="humidity">X</span>%</p></div>
+    </div>
+    <script>
+        // Web socket setup (https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
+        // Retrieve host's address
+        const url = 'ws://' + location.host
+        console.log(url)
+        // Open a new ws connection with the server
+        const socket = new WebSocket(url);
+        // Attach listeners to the socket
+        socket.addEventListener('message', readIncomingMessage)
+
+        function readIncomingMessage(e){
+            const data = JSON.parse(e.data)
+            console.log(data.temperature)
+            document.getElementById('temperature').innerHTML = data.temperature
+            document.getElementById('humidity').innerHTML = data.humidity
+        }
+    </script>
+</body>
+</html>
