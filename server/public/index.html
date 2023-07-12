@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taller IoT 2023</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js" integrity="sha512-bcfltY+lNLlNxz38yBBm/HLaUB1gTV6I0e+fahbF9pS6roIdzUytozWdnFV8ZnM6cSAG5EbmO0ag0a/fLZSG4Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div>
         <p>Temperatura: <span id="temperature">X</span>ºC</p></div>
-        <p>Humdead: <span id="humidity">X</span>%</p></div>
+        <!-- <p>Humedad: <span id="humidity">X</span>%</p></div> -->
     </div>
     <script>
+        // Script Global params
+        let temperatures = []
+        // data window, for 6 hours = 6 h x 60 m x 60 s / 2 s per sample
+        const dataBuffer = 10800 / 12
+
         // Web socket setup (https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
         // Retrieve host's address
         const url = 'ws://' + location.host
@@ -22,10 +28,54 @@
 
         function readIncomingMessage(e){
             const data = JSON.parse(e.data)
-            console.log(data.temperature)
+            console.log(data)
             document.getElementById('temperature').innerHTML = data.temperature
-            document.getElementById('humidity').innerHTML = data.humidity
+            // document.getElementById('humidity').innerHTML = data.humidity
+            temperatures.push(parseFloat(data.temperature))
+            if(temperatures.length > dataBuffer) temperatures.shift()
+            // console.log(temperatures)
+            refreshPlot()
         }
+
+        // Temperature Line plot using p5.js
+        function setup(){
+            createCanvas(600, 200)
+        }
+
+        function refreshPlot(){
+            const max = Math.max(...temperatures)
+            const min = Math.min(...temperatures)
+            console.log(max)
+            console.log(min)
+            background(255)
+            strokeWeight(3)
+            stroke(39, 172, 239)
+            fill(39, 172, 239)
+            if(max != min){
+                for (let i = 0; i < temperatures.length - 1; i++) {
+                    x1 = width * (.1 + .9 * i / dataBuffer)
+                    y1 = map(temperatures[i], max, min, .1 * height, .9 *  height)
+                    x2 = width * (.1 + .9 * (i + 1) / dataBuffer)
+                    y2 = map(temperatures[i + 1], max, min, .1 * height, .9 *  height)
+                    line(x1, y1, x2, y2)
+                }
+                noStroke()
+                text(max, 0, height * .1)
+                text(min, 0, height * .9)
+            }
+            else{
+                // this is the case when the first N readings are the same
+                for (let i = 0; i < temperatures.length - 1; i++) {
+                    x1 = width * (.1 + .9 * i / dataBuffer)
+                    y1 = y2 = height / 2
+                    x2 = width * (.1 + .9 * (i + 1) / dataBuffer)
+                    line(x1, y1, x2, y2)
+                }
+                noStroke()
+                text(max, 0, height / 2)
+            }
+        }
+
     </script>
 </body>
 </html>
