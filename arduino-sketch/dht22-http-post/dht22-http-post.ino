@@ -7,10 +7,13 @@
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
 char serverAddress[] = "192.168.3.142";
+// char serverAddress[] = "glowing-ink-sled.glitch.me";
 WiFiClient wifi;
 int status = WL_IDLE_STATUS;
 
 // HTTP settings ============================
+// Port has to be 80 for production
+// int port = 80;
 int port = 8000;
 HttpClient client = HttpClient(wifi, serverAddress, port);
 bool timeTracked = false;
@@ -52,14 +55,19 @@ void setup() {
 }
 
 void loop() {
-  // POST Request
-  String contentType = "application/x-www-form-urlencoded";
   if(!timeTracked){
     Serial.println("syncing timestamp");
     delay(1000);
-    // POST Request
+    // POST Request with headers
     String postData = "";
-    client.post("/sync", contentType, postData);
+    client.beginRequest();
+    client.post("/sync");
+    client.sendHeader("Content-Type", "application/x-www-form-urlencoded");
+    client.sendHeader("Content-Length", postData.length());
+    client.sendHeader("X-Custom-Header", "custom-header-value");
+    client.beginBody();
+    client.print(postData);
+    client.endRequest();
     String response = client.responseBody();
     // Maybe also eval if response.length is large
     if(response != "-2"){
@@ -92,7 +100,8 @@ void loop() {
     Serial.print(F("°C "));
     Serial.println();
 
-    // POST Request
+    // Simple POST Request to sumbit data
+    String contentType = "application/x-www-form-urlencoded";
     String postData = "temperature=" + String(t) + "&humidity=" + String(h) + "&timestamp=" + String(serverInitialTime + millis() - localInitialTime);
     client.post("/test", contentType, postData);
     // read the status code and body of the response

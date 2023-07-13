@@ -14,6 +14,7 @@ app.get('/scope', (req, res) => {
 })
 
 app.post('/sync', (req, res) => {
+    console.log("sync request received")
     res.send(Date.now().toString())
 })
 
